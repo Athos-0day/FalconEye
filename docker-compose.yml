@@ -12,3 +12,35 @@ services:
       - ./docker/mqtt/mosquitto/log:/mosquitto/log
       - ./docker/mqtt/mosquitto/data:/mosquitto/data
     restart: unless-stopped
+    networks:
+      - falconnet
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./docker/influxdb/data:/var/lib/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpass
+      - DOCKER_INFLUXDB_INIT_ORG=falconeye
+      - DOCKER_INFLUXDB_INIT_BUCKET=mybucket
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=supersecrettoken
+    restart: unless-stopped
+    networks:
+      - falconnet
+  collector:
+    build: ./docker/data-collector
+    container_name: mqtt_collector_influxdb
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+      - influxdb
+    networks:
+      - falconnet
+
+networks:
+  falconnet:
+    name: falconnet
