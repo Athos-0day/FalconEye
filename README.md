@@ -8,16 +8,18 @@ FalconEye is a containerized avionics simulation environment. It simulates aircr
 
 ```mermaid
 graph TD
-  subgraph falconnet
-    nav[Navigation Simulator] --> mqtt[Mosquitto (MQTT Broker)]
-    ctrl[Flight Control Simulator] --> mqtt
-    hydr[Hydraulics Simulator] --> mqtt
-    engine[Engine Simulator] --> mqtt
-    struct[Structure Simulator] --> mqtt
-    mqtt --> collector[MQTT Collector → InfluxDB]
-    collector --> influx[InfluxDB]
-    influx --> grafana[Grafana]
-  end
+    subgraph falconnet
+        avion["Avion Systems"]
+        mqtt["Mosquitto - MQTT Broker"]
+        collector["MQTT Collector → InfluxDB"]
+        influxdb["InfluxDB"]
+        grafana["Grafana"]
+    end
+
+    avion -->|MQTT| mqtt
+    mqtt -->|MQTT| collector
+    collector -->|HTTP| influxdb
+    influxdb -->|HTTP| grafana
 ```
 
 ---
@@ -70,7 +72,7 @@ graph TD
 
 ---
 
-## 📊 Dashboards
+## Dashboards
 
 - **Navigation Monitoring**: GPS coordinates and airspeed
 - **Flight Control Monitoring**: Angle of attack, control surface positions
@@ -111,7 +113,7 @@ bash test/integration/check_network.sh
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License**.
 
