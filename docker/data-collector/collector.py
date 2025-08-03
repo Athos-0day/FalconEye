@@ -13,7 +13,6 @@ INFLUX_BUCKET = "mybucket"
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected to MQTT Broker!")
-        # S'abonner ici, une fois la connexion établie
         client.subscribe("aircraft/#")
     else:
         print(f"Failed to connect, return code {rc}")
@@ -22,42 +21,58 @@ def on_message(client, userdata, msg):
     print(f"Received message on topic {msg.topic}: {msg.payload}", flush=True)
     try:
         payload = json.loads(msg.payload.decode())
-        required_fields = {"timestamp", "value", "unit"}
-
-        if not required_fields.issubset(payload):
-            print("Incomplete message:", payload)
-            return
 
         topic_parts = msg.topic.split('/')
-        if len(topic_parts) < 2:
+        if len(topic_parts) < 3:
             print("Invalid topic:", msg.topic)
             return
+
         measurement = topic_parts[1]
+        field_name = topic_parts[2]
 
-        point = (
-            Point(measurement)
-            .tag("source", payload.get("source", "unknown"))
-            .tag("unit", payload["unit"])
-            .tag("aircraft_zone", payload.get("aircraft_zone", "unknown"))
-            .field("value", float(payload["value"]))
-            .time(payload["timestamp"])
-        )
+        if field_name == "position":
+            if not {"timestamp", "latitude", "longitude"}.issubset(payload):
+                print("Incomplete GPS message:", payload)
+                return
+
+            point = (
+                Point(measurement)
+                .tag("source", payload.get("source", "unknown"))
+                .tag("unit", payload.get("unit", "degrees"))
+                .tag("aircraft_zone", payload.get("aircraft_zone", "unknown"))
+                .field("latitude", float(payload["latitude"]))
+                .field("longitude", float(payload["longitude"]))
+                .time(payload["timestamp"])
+            )
+        else:
+            if not {"timestamp", "value", "unit"}.issubset(payload):
+                print("Incomplete sensor message:", payload)
+                return
+
+            point = (
+                Point(measurement)
+                .tag("source", payload.get("source", "unknown"))
+                .tag("unit", payload["unit"])
+                .tag("aircraft_zone", payload.get("aircraft_zone", "unknown"))
+                .field(field_name, float(payload["value"]))
+                .time(payload["timestamp"])
+            )
+
         print(point, flush=True)
-
         write_api.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=point)
         print(f"→ Data inserted into {measurement}:", point.to_line_protocol(), flush=True)
 
     except Exception as e:
         print("Error:", e)
 
-# Connexion à InfluxDB
+
 influx_client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
 write_api = influx_client.write_api(write_options=SYNCHRONOUS)
 
 mqtt_client = mqtt.Client(protocol=mqtt.MQTTv311)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
-mqtt_client.enable_logger()  # Active les logs pour debug
+mqtt_client.enable_logger()  
 
 connected = False
 while not connected:

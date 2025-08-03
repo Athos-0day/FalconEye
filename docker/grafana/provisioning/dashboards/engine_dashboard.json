@@ -1,0 +1,52 @@
+{
+    "id": null,
+    "title": "Engine Monitoring",
+    "tags": ["engine", "monitoring"],
+    "timezone": "browser",
+    "time": {
+      "from": "now-5m",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "type": "timeseries",
+        "title": "Engine Temperature",
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+        "datasource": "InfluxDB",
+        "targets": [
+          {
+            "query": "from(bucket: \"mybucket\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"engine\" and r._field == \"temperature\")",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Oil Pressure",
+        "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+        "datasource": "InfluxDB",
+        "targets": [
+          {
+            "query": "from(bucket: \"mybucket\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"engine\" and r._field == \"oil_pressure\")",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Engine Vibration",
+        "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+        "datasource": "InfluxDB",
+        "targets": [
+          {
+            "query": "from(bucket: \"mybucket\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"engine\" and r._field == \"vibrations\")",
+            "refId": "C"
+          }
+        ]
+      }
+    ],
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "3s"
+  }
+  

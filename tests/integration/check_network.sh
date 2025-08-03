@@ -3,7 +3,7 @@
 set -e
 
 NETWORK="falconnet"
-SERVICES=("mosquitto" "influxdb" "mqtt_collector_influxdb")
+SERVICES=("mosquitto" "influxdb" "mqtt_collector_influxdb" "engine_simulator" "grafana" "hydraulics_simulator" "navigation_simulator" "structural_simulator" "flightcontrol_simulator")
 
 echo "Shutting down and rebuilding..."
 docker compose down > /dev/null 2>&1
@@ -35,3 +35,5 @@ done
 echo -e "\nTesting HTTP access to InfluxDB from collector..."
 docker exec mqtt_collector_influxdb curl -s http://influxdb:8086/health | grep -q '"status":"pass"' && \
   echo " InfluxDB is reachable and healthy" || echo " Could not reach InfluxDB from collector"
+
+docker compose down

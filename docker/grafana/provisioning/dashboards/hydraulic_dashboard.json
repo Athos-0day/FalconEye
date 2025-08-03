@@ -1,0 +1,54 @@
+{
+    "id": null,
+    "title": "Hydraulic Systems Monitoring",
+    "tags": ["hydraulics", "monitoring"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "3s",
+    "time": {
+      "from": "now-5m",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "type": "timeseries",
+        "title": "Hydraulic Pressure",
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+        "datasource": "InfluxDB",
+        "targets": [
+          {
+            "refId": "A",
+            "query": "from(bucket: \"mybucket\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"hydraulics\" and r._field == \"pressure\")"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Pump State",
+        "gridPos": { "x": 0, "y": 8, "w": 12, "h": 6 },
+        "datasource": "InfluxDB",
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "mappings": [
+              {
+                "type": "value",
+                "options": {
+                  "0": { "text": "OFF" },
+                  "1": { "text": "ON" }
+                }
+              }
+            ]
+          }
+        },
+        "targets": [
+          {
+            "refId": "B",
+            "query": "from(bucket: \"mybucket\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"hydraulics\" and r._field == \"pump_state\")"
+          }
+        ]
+      }
+    ]
+  }
+  

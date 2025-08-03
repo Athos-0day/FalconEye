@@ -1,0 +1,34 @@
+{
+    "id": null,
+    "title": "Structural Integrity Monitoring",
+    "tags": ["structure", "monitoring"],
+    "timezone": "browser",
+    "time": {
+      "from": "now-5m",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "type": "timeseries",
+        "title": "Structural Acceleration",
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+        "datasource": "InfluxDB",
+        "targets": [
+          {
+            "refId": "A",
+            "query": "from(bucket: \"mybucket\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"structure\" and r._field == \"acceleration\")"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "accMS2",
+            "decimals": 2
+          }
+        }
+      }
+    ],
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "3s"
+  }
+  

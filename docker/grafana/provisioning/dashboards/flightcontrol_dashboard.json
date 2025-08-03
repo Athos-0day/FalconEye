@@ -1,0 +1,40 @@
+{
+    "id": null,
+    "title": "Flight Control - Angle of Attack and Control Surfaces",
+    "timezone": "browser",
+    "tags": ["flightcontrol", "monitoring"],
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "3s",
+    "time": {
+      "from": "now-5m",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "type": "timeseries",
+        "title": "Angle of Attack (°)",
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+        "datasource": "InfluxDB",
+        "targets": [
+          {
+            "refId": "A",
+            "query": "from(bucket: \"mybucket\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"flightcontrol\" and r._field == \"angle_of_attack\")"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Control Surface Position (°)",
+        "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+        "datasource": "InfluxDB",
+        "targets": [
+          {
+            "refId": "B",
+            "query": "from(bucket: \"mybucket\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"flightcontrol\" and r._field == \"control_surface_position\")"
+          }
+        ]
+      }
+    ]
+  }
+  
