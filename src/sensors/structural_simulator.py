@@ -3,14 +3,23 @@ import random
 import json
 import paho.mqtt.client as mqtt
 from datetime import datetime, timezone
+import ssl
 
 BROKER_HOST = "mosquitto"
-BROKER_PORT = 1883
+BROKER_PORT = 8883
 PUBLISH_INTERVAL = 1  # seconds
 
 acceleration = 5.0  # g (initial values)
 
-mqtt_client = mqtt.Client()
+mqtt_client = mqtt.Client(client_id="structural-simulator", userdata=None, protocol=mqtt.MQTTv311)
+mqtt_client.username_pw_set(username="structural", password="structural")
+mqtt_client.tls_set(
+    ca_certs="/app/certs/ca.crt",
+    certfile="/app/certs/structural.crt",
+    keyfile="/app/certs/structural.key",
+    tls_version=ssl.PROTOCOL_TLSv1_2
+)
+mqtt_client.tls_insecure_set(False)
 mqtt_client.connect(BROKER_HOST, BROKER_PORT)
 
 def evolve_value(current, normal_min, normal_max, anomaly_chance=0.03, step=1, anomaly_step=5):

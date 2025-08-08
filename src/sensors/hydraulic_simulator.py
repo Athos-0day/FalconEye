@@ -4,12 +4,13 @@ import json
 import logging
 import paho.mqtt.client as mqtt
 from datetime import datetime, timezone
+import ssl
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 BROKER_HOST = "mosquitto"
-BROKER_PORT = 1883
+BROKER_PORT = 8883
 PUBLISH_INTERVAL = 1  # seconds
 
 # Initial values
@@ -27,7 +28,15 @@ anomaly_duration = {
     "pump_state": 0,
 }
 
-mqtt_client = mqtt.Client()
+mqtt_client = mqtt.Client(client_id="hydraulic-simulator", userdata=None, protocol=mqtt.MQTTv311)
+mqtt_client.username_pw_set(username="hydraulic", password="hydraulic")
+mqtt_client.tls_set(
+    ca_certs="/app/certs/ca.crt",
+    certfile="/app/certs/hydraulic.crt",
+    keyfile="/app/certs/hydraulic.key",
+    tls_version=ssl.PROTOCOL_TLSv1_2
+)
+mqtt_client.tls_insecure_set(False)
 mqtt_client.connect(BROKER_HOST, BROKER_PORT)
 
 def evolve_pressure(current, normal_min, normal_max, anomaly_chance=0.03, step=10, anomaly_step=50):

@@ -36,4 +36,18 @@ echo -e "\nTesting HTTP access to InfluxDB from collector..."
 docker exec mqtt_collector_influxdb curl -s http://influxdb:8086/health | grep -q '"status":"pass"' && \
   echo " InfluxDB is reachable and healthy" || echo " Could not reach InfluxDB from collector"
 
+echo -e "\nTesting TCP port connectivity on localhost..."
+
+PORTS=(8883 8086 3000 9001)
+
+for port in "${PORTS[@]}"; do
+  echo "Testing localhost port $port ..."
+  if nc -zv localhost $port 2>&1 | grep -q succeeded; then
+    echo "Port $port is open"
+  else
+    echo "Port $port is closed"
+  fi
+done
+
 docker compose down
+

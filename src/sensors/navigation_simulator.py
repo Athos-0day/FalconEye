@@ -4,9 +4,10 @@ import json
 import math
 import paho.mqtt.client as mqtt
 from datetime import datetime, timezone
+import ssl
 
 BROKER_HOST = "mosquitto"
-BROKER_PORT = 1883
+BROKER_PORT = 8883
 PUBLISH_INTERVAL = 1  # seconds
 
 # Initial position (somewhere over Europe)
@@ -14,10 +15,17 @@ latitude = 48.8566
 longitude = 2.3522
 airspeed = 800.0  # km/h
 
-# Direction en degrés (0 = nord, 90 = est, etc.)
 heading = random.uniform(0, 360)
 
-mqtt_client = mqtt.Client()
+mqtt_client = mqtt.Client(client_id="navigation-simulator", userdata=None, protocol=mqtt.MQTTv311)
+mqtt_client.username_pw_set(username="navigation", password="navigation")
+mqtt_client.tls_set(
+    ca_certs="/app/certs/ca.crt",
+    certfile="/app/certs/navigation.crt",
+    keyfile="/app/certs/navigation.key",
+    tls_version=ssl.PROTOCOL_TLSv1_2
+)
+mqtt_client.tls_insecure_set(False)
 mqtt_client.connect(BROKER_HOST, BROKER_PORT)
 
 def evolve_heading(current_heading, max_change=5):

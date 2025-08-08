@@ -4,12 +4,13 @@ import json
 import logging
 import paho.mqtt.client as mqtt
 from datetime import datetime, timezone
+import ssl
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 BROKER_HOST = "mosquitto"
-BROKER_PORT = 1883
+BROKER_PORT = 8883
 PUBLISH_INTERVAL = 1  # seconds
 
 # Initial values
@@ -30,7 +31,15 @@ anomaly_duration = {
     "vibrations": 0,
 }
 
-mqtt_client = mqtt.Client()
+mqtt_client = mqtt.Client(client_id="engine-simulator")
+mqtt_client.username_pw_set(username="engine", password="engine")
+mqtt_client.tls_set(
+    ca_certs="/app/certs/ca.crt",
+    certfile="/app/certs/engine.crt",
+    keyfile="/app/certs/engine.key",
+    tls_version=ssl.PROTOCOL_TLSv1_2
+)
+mqtt_client.tls_insecure_set(False)
 mqtt_client.connect(BROKER_HOST, BROKER_PORT)
 
 def evolve_value(name, current, normal_min, normal_max, anomaly_chance=0.05, step=5, anomaly_step=20):

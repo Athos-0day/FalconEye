@@ -3,12 +3,13 @@ services:
     image: eclipse-mosquitto:2
     container_name: mosquitto
     ports:
-      - "1883:1883"
+      - "8883:8883"
       - "9001:9001"
     volumes:
       - ./docker/mqtt/mosquitto/config:/mosquitto/config
       - ./docker/mqtt/mosquitto/log:/mosquitto/log
       - ./docker/mqtt/mosquitto/data:/mosquitto/data
+      - ./docker/mqtt/mosquitto/certs:/mosquitto/certs
     restart: unless-stopped
     networks:
       - falconnet
@@ -40,6 +41,8 @@ services:
       - influxdb
     networks:
       - falconnet
+    volumes:
+      - ./config/certs:/app/certs:ro
 
   grafana:
     image: grafana/grafana:10.4.1
@@ -68,6 +71,8 @@ services:
       - falconnet
     depends_on:
       - mosquitto
+    volumes:
+      - ./config/certs:/app/certs:ro
 
   hydraulics_simulator:
     build:
@@ -79,6 +84,8 @@ services:
       - falconnet
     depends_on:
       - mosquitto
+    volumes:
+      - ./config/certs:/app/certs:ro
   
   structural_simulator:
     build:
@@ -90,6 +97,8 @@ services:
       - falconnet
     depends_on:
       - mosquitto
+    volumes:
+      - ./config/certs:/app/certs:ro
   
   navigation_simulator:
     build:
@@ -101,6 +110,8 @@ services:
       - falconnet
     depends_on:
       - mosquitto
+    volumes:
+      - ./config/certs:/app/certs:ro
   
   flightcontrol_simulator:
     build:
@@ -112,6 +123,8 @@ services:
       - falconnet
     depends_on:
       - mosquitto
+    volumes:
+      - ./config/certs:/app/certs:ro
 
 
 networks:

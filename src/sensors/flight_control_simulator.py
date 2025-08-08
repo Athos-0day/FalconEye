@@ -3,17 +3,25 @@ import random
 import json
 import paho.mqtt.client as mqtt
 from datetime import datetime, timezone
+import ssl
 
 BROKER_HOST = "mosquitto"
-BROKER_PORT = 1883
+BROKER_PORT = 8883
 PUBLISH_INTERVAL = 1  # seconds
 
-mqtt_client = mqtt.Client()
+mqtt_client = mqtt.Client(client_id="flight-control-simulator", userdata=None, protocol=mqtt.MQTTv311)
+mqtt_client.username_pw_set(username="flightcontrol", password="flightcontrol")
+mqtt_client.tls_set(
+    ca_certs="/app/certs/ca.crt",
+    certfile="/app/certs/flightcontrol.crt",
+    keyfile="/app/certs/flightcontrol.key",
+    tls_version=ssl.PROTOCOL_TLSv1_2
+)
+mqtt_client.tls_insecure_set(False)
 mqtt_client.connect(BROKER_HOST, BROKER_PORT)
 
-# Valeurs initiales dans les plages normales
-angle_of_attack = 20.0  # début vers milieu de plage 15°-25°
-control_surface_position = 0.0  # milieu de -30° à +30°
+angle_of_attack = 20.0  
+control_surface_position = 0.0 
 
 def evolve_value(current, min_val, max_val, step=0.5, anomaly_chance=0.05, anomaly_step=10):
     """

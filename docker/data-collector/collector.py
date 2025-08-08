@@ -3,6 +3,7 @@ import paho.mqtt.client as mqtt
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 import time
+import ssl
 
 # InfluxDB config - hostname docker service
 INFLUX_URL = "http://influxdb:8086"
@@ -70,14 +71,23 @@ influx_client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_OR
 write_api = influx_client.write_api(write_options=SYNCHRONOUS)
 
 mqtt_client = mqtt.Client(protocol=mqtt.MQTTv311)
+mqtt_client.username_pw_set(username="influxdb", password="influxdb")
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
 mqtt_client.enable_logger()  
 
+mqtt_client.tls_set(
+    ca_certs="/app/certs/ca.crt",
+    certfile="/app/certs/influxdb.crt",
+    keyfile="/app/certs/influxdb.key",
+    tls_version=ssl.PROTOCOL_TLSv1_2
+)
+mqtt_client.tls_insecure_set(False)
+
 connected = False
 while not connected:
     try:
-        mqtt_client.connect("mosquitto", 1883)
+        mqtt_client.connect("mosquitto", 8883)
         connected = True
     except Exception as e:
         print("Waiting for MQTT broker to be ready...", e)
