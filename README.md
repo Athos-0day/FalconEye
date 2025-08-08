@@ -1,6 +1,7 @@
+
 # FalconEye Avionics Simulation
 
-FalconEye is a containerized avionics simulation environment. It simulates aircraft subsystems (navigation, flight control, hydraulics, engine, structure), publishes sensor data via MQTT, stores the data in InfluxDB, and visualizes it in Grafana dashboards.
+FalconEye is a containerized avionics simulation environment. It simulates aircraft subsystems (navigation, flight control, hydraulics, engine, structure), publishes sensor data via MQTT over TLS with client authentication, stores the data in InfluxDB, and visualizes it in Grafana dashboards.
 
 ---
 
@@ -10,13 +11,13 @@ FalconEye is a containerized avionics simulation environment. It simulates aircr
 graph TD
     subgraph falconnet
         avion["Avion Systems"]
-        mqtt["Mosquitto - MQTT Broker"]
+        mqtt["Mosquitto - MQTT Broker (TLS + ACL)"]
         collector["MQTT Collector → InfluxDB"]
         influxdb["InfluxDB"]
         grafana["Grafana"]
     end
 
-    avion -->|MQTT| mqtt
+    avion -->|MQTT over TLS| mqtt
     mqtt -->|MQTT| collector
     collector -->|HTTP| influxdb
     influxdb -->|HTTP| grafana
@@ -39,9 +40,9 @@ graph TD
    cd falconeye
    ```
 
-2. Launch the infrastructure:
+2. Launch the infrastructure (build included):
    ```bash
-   docker-compose up -d
+   docker-compose up -d --build
    ```
 
 3. Access Grafana at [http://localhost:3000](http://localhost:3000)  
@@ -53,22 +54,17 @@ graph TD
 
 ---
 
-## Configuration
+## Configuration Highlights
 
-- All services are isolated in the `falconnet` Docker network.
-- The system includes:
-  - `mosquitto`: MQTT broker
-  - `influxdb`: time-series database
-  - `grafana`: dashboards
-  - `mqtt-collector-influxdb`: validates and stores MQTT messages
-  - Simulators:
-    - `navigation_simulator.py`
-    - `flight_control_simulator.py`
-    - `hydraulic_simulator.py`
-    - `engine_simulator.py`
-    - `structural_simulator.py`
-
-- Dashboards are auto-loaded from the `/dashboards/` folder.
+- All services run isolated in the `falconnet` Docker network.
+- MQTT broker (`mosquitto`) is configured with:
+  - TLS encryption using **ECDHE** cipher suites (ECDHE-ECDSA-AES256-GCM-SHA384, ECDHE-RSA-AES256-GCM-SHA384).
+  - Client certificate authentication (mutual TLS).
+  - Access Control Lists (ACLs) to restrict topic permissions per user.
+- MQTT clients authenticate with username/password **and** client certificates.
+- Passwords managed with `mosquitto_passwd` file.
+- The ACL file enforces topic-level access control.
+- MQTT clients specify username/password and present valid certs for authentication.
 
 ---
 
@@ -80,41 +76,47 @@ graph TD
 - **Engine Monitoring**: Temperature, Oil pressure and Vibrations
 - **Structural Monitoring**: Acceleration
 
-Dashboards are refreshed every 3 seconds and show the last 5 minutes of data.
+Dashboards auto-refresh every 3 seconds showing last 5 minutes of data.
 
 ---
 
 ## Testing
 
-### End-to-End Test
+### Network Connectivity Test
 
-Run an integration test to verify the full data flow from sensor to dashboard (but not possible with the integration of the others simulator):
+Run the enhanced network test script to verify:
 
-```bash
-docker-compose run --rm end_to_end_test
-```
-
-This test checks:
-- MQTT publication
-- JSON message validation
-- Data insertion into InfluxDB
-- Grafana data availability
-
-### Network Test
-
-Use the included `check_network.sh` script to verify:
-- All containers are connected to `falconnet`
-- Critical communication paths:
-  - mosquitto → mqtt-collector-influxdb → influxdb
+- All containers are connected to the `falconnet` network.
+- Basic ping tests between key services.
+- HTTP health check of InfluxDB from the collector.
+- TCP port availability (Mosquitto 8883, InfluxDB 8086, Grafana 3000, Mosquitto WS 9001).
 
 ```bash
 bash test/integration/check_network.sh
 ```
+
+### ACL and TLS Authentication Test
+
+A dedicated test script validates:
+
+- MQTT publish/subscribe with valid user credentials and certificates.
+- Rejection of invalid credentials (wrong password, missing certificate).
+- Topic permission enforcement (ACLs prevent unauthorized topic access).
+
+Run the test with:
+
+```bash
+bash test/integration/check_acl_certs.sh
+```
+
+This script uses `mosquitto_pub` and `mosquitto_sub` inside Docker containers to verify broker security features.
+
+### End-to-End Test
+
+**Currently unavailable.** The full end-to-end integration test is temporarily disabled.
 
 ---
 
 ## License
 
 This project is licensed under the **MIT License**.
-
----
