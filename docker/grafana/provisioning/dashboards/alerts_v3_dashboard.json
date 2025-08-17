@@ -1,0 +1,106 @@
+{
+  "id": null,
+  "title": "Aircraft Alerts V3",
+  "uid": "alerts-dashboard-v3",
+  "version": 1,
+  "schemaVersion": 37,
+  "tags": ["aircraft", "alerts"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "type": "table",
+      "title": "Realtime Alerts",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb-datasource"
+      },
+      "targets": [
+        {
+          "query": "from(bucket: \"aircraft\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"alerts\")\n  |> keep(columns: [\"_time\", \"_field\", \"_value\", \"sensor\", \"severity\", \"aircraft_zone\", \"source\", \"unit\", \"measurement\"])\n  |> pivot(rowKey:[\"_time\"], columnKey:[\"_field\"], valueColumn:\"_value\")\n  |> sort(columns:[\"_time\"], desc: true)",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Time",
+            "desc": true
+          }
+        ],
+        "displayMode": "table"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "value" },
+            "properties": [
+              { "id": "unit", "value": "none" },
+              { "id": "custom.width", "value": 120 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "rate_per_s" },
+            "properties": [
+              { "id": "unit", "value": "none" },
+              { "id": "custom.width", "value": 120 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "severity" },
+            "properties": [
+              { "id": "custom.width", "value": 100 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "_time" },
+            "properties": [
+              { "id": "custom.width", "value": 180 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "measurement" },
+            "properties": [
+              { "id": "custom.width", "value": 180 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "sensor" },
+            "properties": [
+              { "id": "custom.width", "value": 140 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "aircraft_zone" },
+            "properties": [
+              { "id": "custom.width", "value": 120 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "source" },
+            "properties": [
+              { "id": "custom.width", "value": 140 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "unit" },
+            "properties": [
+              { "id": "custom.width", "value": 80 }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "templating": { "list": [] },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  }
+}
