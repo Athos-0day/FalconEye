@@ -3,7 +3,7 @@
 set -e
 
 NETWORK="falconnet"
-SERVICES=("mosquitto" "influxdb" "mqtt_collector_influxdb" "engine_simulator" "grafana" "hydraulics_simulator" "navigation_simulator" "structural_simulator" "flightcontrol_simulator")
+SERVICES=("mosquitto" "influxdb" "mqtt_collector_influxdb" "engine_simulator" "grafana" "hydraulics_simulator" "navigation_simulator" "structural_simulator" "flightcontrol_simulator" "analyzer")
 
 echo "Shutting down and rebuilding..."
 docker compose down > /dev/null 2>&1

@@ -52,6 +52,8 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=adminpass
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/aircraft_alerts.json
+      - GF_PROVISIONING_PATH=/etc/grafana/provisioning
     volumes:
       - ./docker/grafana:/var/lib/grafana
       - ./docker/grafana/provisioning:/etc/grafana/provisioning
@@ -123,6 +125,19 @@ services:
       - falconnet
     depends_on:
       - mosquitto
+    volumes:
+      - ./config/certs:/app/certs:ro
+  
+  analyzer:
+    build: 
+      context: .
+      dockerfile: docker/anomaly-detector/Dockerfile
+    container_name: analyzer
+    depends_on:
+      - mosquitto
+      - influxdb
+    networks:
+      - falconnet
     volumes:
       - ./config/certs:/app/certs:ro
 

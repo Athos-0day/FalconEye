@@ -2,7 +2,7 @@
 
 set -e
 
-SENSORS=("engine" "flightcontrol" "hydraulic" "navigation" "structural")
+SENSORS=("engine" "flightcontrol" "hydraulic" "navigation" "structural" "analysis")
 CERT_DIR="config/certs"
 CLIENT_DIR="docker/mqtt/mosquitto/certs"
 

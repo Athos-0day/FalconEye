@@ -28,16 +28,34 @@ def on_message(client, userdata, msg):
             print("Invalid topic:", msg.topic)
             return
 
-        measurement = topic_parts[1]
-        field_name = topic_parts[2]
+        # Exemple: aircraft/alerts/engine_temp/1
+        if topic_parts[1] == "alerts":
+            sensor_name = topic_parts[2] if len(topic_parts) >= 3 else "unknown"
+            required_fields = {"timestamp", "measurement", "value", "unit", "rate_per_s", "level", "source", "aircraft_zone"}
+            if not required_fields.issubset(payload):
+                print("Incomplete alert message:", payload)
+                return
 
-        if field_name == "position":
+            point = (
+                Point("alerts")
+                .tag("sensor", sensor_name)
+                .tag("severity", payload.get("level", "warning"))
+                .tag("source", payload.get("source", "unknown"))
+                .tag("unit", payload.get("unit", ""))
+                .tag("aircraft_zone", payload.get("aircraft_zone", ""))
+                .field("measurement", payload.get("measurement", "unknown"))  # <-- ajouté
+                .field("value", float(payload["value"]))
+                .field("rate_per_s", float(payload.get("rate_per_s", 0.0)))
+                .time(payload["timestamp"])
+            )
+
+        elif topic_parts[2] == "position":
             if not {"timestamp", "latitude", "longitude"}.issubset(payload):
                 print("Incomplete GPS message:", payload)
                 return
 
             point = (
-                Point(measurement)
+                Point(topic_parts[1])
                 .tag("source", payload.get("source", "unknown"))
                 .tag("unit", payload.get("unit", "degrees"))
                 .tag("aircraft_zone", payload.get("aircraft_zone", "unknown"))
@@ -45,27 +63,27 @@ def on_message(client, userdata, msg):
                 .field("longitude", float(payload["longitude"]))
                 .time(payload["timestamp"])
             )
+
         else:
             if not {"timestamp", "value", "unit"}.issubset(payload):
                 print("Incomplete sensor message:", payload)
                 return
 
             point = (
-                Point(measurement)
+                Point(topic_parts[1])
                 .tag("source", payload.get("source", "unknown"))
                 .tag("unit", payload["unit"])
                 .tag("aircraft_zone", payload.get("aircraft_zone", "unknown"))
-                .field(field_name, float(payload["value"]))
+                .field(topic_parts[2], float(payload["value"]))
                 .time(payload["timestamp"])
             )
 
         print(point, flush=True)
         write_api.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=point)
-        print(f"→ Data inserted into {measurement}:", point.to_line_protocol(), flush=True)
+        print(f"→ Data inserted into {point.to_line_protocol()}", flush=True)
 
     except Exception as e:
         print("Error:", e)
-
 
 influx_client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
 write_api = influx_client.write_api(write_options=SYNCHRONOUS)
