@@ -6,6 +6,7 @@ FalconEye is a containerized avionics simulation environment. It simulates aircr
 
 ## Architecture
 
+```mermaid
 graph TD
     subgraph falconnet
         avion["Avion Systems"]
@@ -26,6 +27,7 @@ graph TD
 
     analyzer -->|MQTT over TLS| mqtt
 
+```
 
 ---
 
