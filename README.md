@@ -18,11 +18,11 @@ graph TD
     end
 
     avion -->|MQTT over TLS| mqtt
-    mqtt -->|MQTT| collector
+    mqtt -->|MQTT over TLS| collector
     collector -->|HTTP| influxdb
     influxdb -->|HTTP| grafana
 
-    mqtt -->|MQTT| analyzer
+    mqtt -->|MQTT over TLS| analyzer
     influxdb -->|HTTP| analyzer
 
     analyzer -->|MQTT over TLS| mqtt
